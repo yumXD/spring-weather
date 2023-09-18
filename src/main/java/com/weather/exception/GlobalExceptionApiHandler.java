@@ -1,5 +1,6 @@
 package com.weather.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
@@ -24,5 +25,12 @@ public class GlobalExceptionApiHandler {
         // Redis 연결 문제 예외 처리
         log.error("Redis 연결 불가");
         return new ResponseEntity<>("Redis 연결 문제: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<String> handleJsonProcessingException(JsonProcessingException ex) {
+        // 예외 처리 로직 작성
+        log.error("JSON 처리 중 오류 발생: " + ex.getMessage());
+        return new ResponseEntity<>("JSON 처리 중 오류: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
