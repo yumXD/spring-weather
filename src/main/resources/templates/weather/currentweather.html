@@ -31,53 +31,89 @@
       </div>
     </div>
 
+    <!-- 로딩 모달 다이얼로그 -->
+    <div class="modal" id="loadingModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="spinner-border" role="status">
+              <span class="sr-only"></span>
+            </div>
+            <p class="mt-2">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bootstrap JS 및 Popper.js 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/@popperjs/core@2"></script>
 
     <script>
-      const cities = ["Seoul", "Busan", "New York", "Tokyo"]; // 원하는 도시명으로 변경
+      const cities = ["Seoul", "Busan", "New York", "Tokyo"];
+      const loadingModal = document.getElementById("loadingModal");
 
-      cities.forEach((city, index) => {
-        fetch(`/api/weather/current?city=${city}`)
-          .then((response) => response.json())
+      function fetchData(city, index) {
+        return fetch(`/api/weather/current?city=${city}`)
+          .then((response) => {
+            if (!response.ok) {
+              return response.text().then((text) => {
+                throw new Error(text);
+              });
+            }
+            return response.json();
+          })
           .then((data) => {
-            // 캘빈에서 섭씨로 변환하는 함수
             function kelvinToCelsius(kelvin) {
               return kelvin - 273.15;
             }
 
-            // 데이터 처리 및 화면에 표시
             const cityCard = document.getElementById(`city-card-${index + 1}`);
             cityCard.innerHTML = `
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">${data.name}, ${
-              data.sys.country
-            }</h5>
-                                <p class="card-text">온도: ${kelvinToCelsius(
-                                  data.main.temp
-                                ).toFixed(0)}°C</p>
-                                <p class="card-text">체감 온도: ${kelvinToCelsius(
-                                  data.main.feels_like
-                                ).toFixed(0)}°C</p>
-                                <p class="card-text">날씨: ${
-                                  data.weather[0].description
-                                }</p>
-                                <p class="card-text">풍속: ${
-                                  data.wind.speed
-                                } m/s</p>
-                                <p class="card-text">구름: ${
-                                  data.clouds.all
-                                }%</p>
-                            </div>
-                        </div>
-                    `;
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">${data.name}, ${data.sys.country}</h5>
+                <p class="card-text">온도: ${kelvinToCelsius(
+                  data.main.temp
+                ).toFixed(0)}°C</p>
+                <p class="card-text">체감 온도: ${kelvinToCelsius(
+                  data.main.feels_like
+                ).toFixed(0)}°C</p>
+                <p class="card-text">날씨: ${data.weather[0].description}</p>
+                <p class "card-text">풍속: ${data.wind.speed} m/s</p>
+                <p class="card-text">구름: ${data.clouds.all}%</p>
+            </div>
+        </div>
+      `;
           })
           .catch((error) => {
-            console.error(`API 호출 오류: ${error.message}`);
+            //console.error(error);
+
+            const cityCard = document.getElementById(`city-card-${index + 1}`);
+            cityCard.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text text-danger">에러발생! 원인: ${error.message}</p>
+            </div>
+        </div>
+      `;
           });
-      });
+      }
+
+      // 로딩 모달 표시
+      loadingModal.style.display = "block";
+
+      const promises = cities.map((city, index) => fetchData(city, index));
+
+      Promise.all(promises)
+        .then(() => {
+          // 모든 요청이 완료되면 로딩 모달 숨김
+          loadingModal.style.display = "none";
+        })
+        .catch((error) => {
+          console.error("네트워크 에러:", error);
+          loadingModal.style.display = "none";
+        });
     </script>
   </body>
 </html>

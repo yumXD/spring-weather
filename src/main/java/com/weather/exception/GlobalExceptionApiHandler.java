@@ -20,6 +20,13 @@ public class GlobalExceptionApiHandler {
         return new ResponseEntity<>("인증되지 않은 접근: " + ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(HttpClientErrorException.NotFound.class)
+    public ResponseEntity<String> handleNotFoundException(HttpClientErrorException.NotFound ex) {
+        // HTTP 404 NotFound 예외 처리
+        log.error("올바르지 않은 API URL");
+        return new ResponseEntity<>("유효하지 않은 API URL 접근: " + ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(RedisConnectionFailureException.class)
     public ResponseEntity<String> handleRedisConnectionFailureException(RedisConnectionFailureException ex) {
         // Redis 연결 문제 예외 처리
